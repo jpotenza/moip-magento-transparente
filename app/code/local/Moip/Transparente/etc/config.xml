@@ -1,0 +1,106 @@
+<?xml version="1.0"?>
+
+<config>
+    <modules>
+        <Moip_Transparente>
+            <version>1.0</version>
+        </Moip_Transparente>
+    </modules>
+
+    <global>
+        <models>
+            <moip>
+                <class>Moip_Transparente_Model</class>
+            </moip>
+        </models>
+
+        <resources>
+            <moip_setup>
+                <setup>
+                    <module>Moip_Transparente</module>
+                </setup>
+                <connection>
+                    <use>core_setup</use>
+                </connection>
+            </moip_setup>
+            
+            <moip_write>
+                <connection>
+                    <use>core_write</use>
+                </connection>
+            </moip_write>
+            <moip_read>
+                <connection>
+                    <use>core_read</use>
+                </connection>
+            </moip_read>
+        </resources>
+
+        <blocks>
+            <moip>
+                <class>Moip_Transparente_Block</class>
+            </moip>
+        </blocks>
+
+        <helpers>
+            <moip>
+                <class>Moip_Transparente_Helper</class>
+            </moip>
+        </helpers>
+
+    </global>
+
+    <frontend>
+        <routers>
+            <moip>
+                <use>standard</use>
+                <args>
+                    <module>Moip_Transparente</module>
+                    <frontName>Moip</frontName>
+                </args>
+            </moip>
+        </routers>
+        <translate>
+            <modules>
+                <moip>
+                    <files>
+                        <default>moip.csv</default>
+                    </files>
+                </moip>
+            </modules>
+        </translate>
+        <layout>
+            <updates>
+                <moip>
+                    <file>moip.xml</file>
+                </moip>
+            </updates>
+        </layout>
+    </frontend>
+
+    <adminhtml>
+        <translate>
+            <modules>
+                <moip>
+                    <files>
+                        <default>moip.csv</default>
+                    </files>
+                </moip>
+            </modules>
+        </translate>
+    </adminhtml>
+
+    <default>
+        <payment>
+            <moip_transparente_standard>
+                <active>1</active>
+                <model>Moip_Transparente_Model_Standard</model>
+                <title><![CDATA[Moip]]></title>
+                <mensagem_redirect_moip><![CDATA[<p>Seu pedido não foi processado, favor efetuar o pagamento.</p><p>Você será redirecionado para o <b>Moip</b> em alguns instantes.</p>]]>
+                </mensagem_redirect_moip>
+                <allowspecific>1</allowspecific>
+            </moip_transparente_standard>
+        </payment>
+    </default>
+
+</config>

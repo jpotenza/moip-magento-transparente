@@ -1,0 +1,152 @@
+<?php
+/**
+ * MoIP - Moip Payment Module
+ *
+ * @title      Magento -> Custom Payment Module for Moip (Brazil)
+ * @category   Payment Gateway
+ * @package    Moip_Transparente
+ * @author     MoIP Pagamentos S/a
+ * @copyright  Copyright (c) 2010 MoIP Pagamentos S/A
+ * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ */
+
+$standard = Mage::getSingleton('moip/standard');
+$api = Mage::getSingleton('moip/api');
+$api->setContaMoip($standard->getConfigData('conta_moip'));
+$ambiente = $standard->getConfigData('ambiente');
+$api->setAmbiente($standard->getConfigData('ambiente'));
+$pgdireto = $api->hasPagamentoDireto();
+$javascript = ($ambiente == "teste") ? "http://desenvolvedor.moip.com.br/sandbox/transparente/MoipWidget.js" : "http://www.moip.com.br/ws/transparente/MoipWidget.js" ; 
+?>
+<script type="text/javascript" src="<?php echo $javascript?>"></script>
+<script type="text/javascript" src="http://code.jquery.com/jquery-1.7.min.js"></script>
+<div id="MoipWidget" data-token="{$token}" callback-method-success="funcao_sucesso" callback-method-error="funcao_falha"></div>
+<script type="text/javascript">
+jQuery.noConflict();
+funcao_sucesso = function(data){
+  //SUA FUNÇÃO DE CALLBACK PARA SUCESSO            
+  jQuery("#sendToMoip").removeAttr("disabled");
+                        };
+                        funcao_falha = function(data) {
+                          alert("erro");
+                          jQuery("#sendToMoip").removeAttr("disabled");
+                        };
+                        enviar = function() {
+                          var settings = {
+                            "Forma": "CartaoCredito",
+                              "Instituicao": "Visa",
+                              "Parcelas": 5,
+                              "Recebimento": "AVista",
+                              "CartaoCredito": {
+                                "Numero": jQuery("input[name=Numero]").val(),
+                                  "Expiracao": jQuery("input[name=Expiracao]").val(),
+                        "CodigoSeguranca": jQuery("input[name=CodigoSeguranca]").val(),
+                        "Portador": {
+                          "Nome": "Nome Sobrenome",
+                            "DataNascimento": "12/12/1989",
+                            "Telefone": "11-64534235",
+                            "Identidade": "123.456.789-10"
+                        }
+                        }
+                        }
+                        jQuery("#sendToMoip").attr("disabled", "disabled");
+                        MoipWidget(settings);
+                        }
+                    </script>
+<ul id="payment_form_<?php echo $this->getMethodCode() ?>" style="display:none;margin-left: 30px;">
+    <?php if (($standard->getConfigData('pagamento_direto') and $pgdireto->Resposta->Status == "Sucesso") and ($pgdireto->Resposta->BoletoBancario == "true" or $pgdireto->Resposta->DebitoBancario == "true" or $pgdireto->Resposta->CartaoCredito == "true")): ?>
+        <li>
+            <div class="input-box">
+                <img src="https://www.moip.com.br/moiplabs/logo_moip.png">
+                <br>
+                <br>
+            <?php if (in_array("BoletoBancario", $standard->getFormasPagamento()) and $pgdireto->Resposta->BoletoBancario == "true"): ?>
+                <label> <input onclick="document.getElementById('moip_debito').style.display='none';document.getElementById('moip_credito').style.display='none'" type="radio" id="forma_pagamento" name="payment[forma_pagamento]" title="<?php echo Mage::helper('payment')->__("forma_pagamento") ?>" value="BoletoBancario"/> Boleto Bancário</label>
+                <br><br>
+            <?php endif; ?>
+
+            <?php if (in_array("DebitoBancario", $standard->getFormasPagamento()) and $pgdireto->Resposta->DebitoBancario == "true"): ?>
+                    <label><input onclick="document.getElementById('moip_debito').style.display='block';document.getElementById('moip_credito').style.display='none'" type="radio" id="forma_pagamento" name="payment[forma_pagamento]" title="<?php echo Mage::helper('payment')->__("forma_pagamento") ?>" value="DebitoBancario"/> Débito Online</label>
+                    <div id="moip_debito" style="display:none">
+                        <ul style="margin-left: 40px;" >
+                            <li style="display:block; vertical-align: center;"><label><input type="radio" id="debito_instituicao" name="payment[debito_instituicao]" value="BancoDoBrasil"/> <img  src="https://www.moip.com.br/moiplabs/bb_16x16.png" alt="Banco do Brasil"> Banco do Brasil</label></li>
+                            <li><label><input type="radio" id="debito_instituicao" name="payment[debito_instituicao]" value="Bradesco"/> <img src="https://www.moip.com.br/moiplabs/bradesco_16x16.png"  alt="Bradesco"> Bradesco</label></li>
+                            <li><label><input type="radio" id="debito_instituicao" name="payment[debito_instituicao]" value="Itau"/> <img src="https://www.moip.com.br/moiplabs/itau_16x16.png" alt="Itaú" > Itaú</label></li>
+                            <li><label><input type="radio" id="debito_instituicao" name="payment[debito_instituicao]" value="BancoReal"/> <img src="https://www.moip.com.br/moiplabs/banco_real_16x16.png"  alt="Banco Real"> Banco Real</label></li>
+                            <li><label><input type="radio" id="debito_instituicao" name="payment[debito_instituicao]" value="Banrisul"/> <img src="https://www.moip.com.br/moiplabs/banrisul_16x16.png"  alt="Banrisul"> Banrisul</label></li>
+                        </ul>
+                    </div>
+
+            <?php endif; ?>
+
+            <?php if (in_array("CartaoCredito", $standard->getFormasPagamento()) and $pgdireto->Resposta->CartaoCredito == "true"): ?>
+                        <br><br>
+                        <label><input onclick="document.getElementById('moip_credito').style.display='block';document.getElementById('moip_debito').style.display='none'" type="radio" id="forma_pagamento" name="payment[forma_pagamento]" title="<?php echo Mage::helper('payment')->__("forma_pagamento") ?>" value="CartaoCredito"/> Cartão de crédito</label>
+                        <div id="moip_credito" style="display:none">
+                            <ul style="margin-left: 40px;">
+                                <li style="margin-bottom: 5px;"><label>Cartão: &nbsp;
+                                        <select name="payment[credito_instituicao]" id="credito_instituicao">
+                                            <option value="Visa">Visa</option>
+                                            <option value="Mastercard">Mastercard</option>
+                                            <option value="AmericanExpress">American Express</option>
+                                            <option value="Diners">Diners</option>
+                                            <option value="Hipercard">Hipercard</option>
+                                <?php /* <option value="Paggo">Paggo</option> */ ?>
+                            </select></label>
+                    </li>
+                    <li style="margin-bottom: 5px;"><label>Número:
+                            <input type="text" name="payment[credito_numero]" id="credito_numero" class="input-text">
+                            &nbsp;&nbsp;&nbsp;Expiração: <input type="text" name="payment[credito_expiracao_mes]" id="credito_expiracao_mes" class="input-text" style="width: 20px">&nbsp;<b>/</b>&nbsp;<input type="text" name="payment[credito_expiracao_ano]" id="credito_expiracao_ano" style="width: 20px" class="input-text"></label>
+                    </li>
+                    <li></li>
+                    <li style="margin-bottom: 5px;"><label>Código de segurança: <input type="text" name="payment[credito_codigo_seguranca]" id="credito_codigo_seguranca" style="width: 30px" class="input-text"></label></li>
+
+                    <?php if ($standard->getConfigData('parcelamento')): ?>
+                                    <li>
+                                        <label>Opções de pagamento:
+                                            <select name="payment[credito_parcelamento]" id="credito_parcelamento">
+<?php
+$data = $standard->getQuote()->getShippingAddress();
+$parcelamento = $api->getParcelamento($data->getGrandTotal());
+foreach ($parcelamento as $k => $v): ?>
+                                        <option value="<?php echo $k . '|' . $v['valor'] ?>"><?php echo $k . "x R$ " . number_format($v['valor'], "2", ",", ".") . " | Total: R$ " . number_format($v['total'], "2", ",", "."); ?></option>
+                                <?php endforeach; ?>
+                                    </select>
+                                </label>
+                            </li>
+                    <?php endif; ?>
+                                        <li>&nbsp;</li>
+                                        <li>
+                                            <table border="0" cellpadding="0" cellspacing="0">
+                                                <tr style="height: 25px;">
+                                                    <td width="110">Nome no cartão:</td>
+                                                    <td><input type="text" name="payment[credito_portador_nome]" id="credito_portador_nome" style="width: 200px" class="input-text"></td>
+                                                </tr>
+                                                <tr style="height: 25px;">
+                                                    <td>CPF:</td>
+                                                    <td><input type="text" name="payment[credito_portador_cpf]" id="credito_portador_cpf"  style="width: 90px" class="input-text"> <span style="font-size: 10px;"><i>Ex. 111.111.111-11</i></span></td>
+                                                </tr>
+                                                <tr style="height: 25px;">
+                                                    <td>Telefone:</td>
+                                                    <td><input type="text" name="payment[credito_portador_telefone]" id="credito_portador_telefone"  style="width: 90px" class="input-text"> <span style="font-size: 10px;"><i>Ex. (11)1111-1111</i></span></td>
+                                                </tr>
+                                                <tr style="height: 25px;">
+                                                    <td>Data nascimento:</td>
+                                                    <td><input type="text" name="payment[credito_portador_nascimento]" id="credito_portador_nascimento"  style="width: 70px;" class="input-text"> <span style="font-size: 10px;"><i>Ex. 30/11/1980</i></span></td>
+                                                </tr>
+                                            </table>
+                                        </li>
+                                    </ul>
+                                </div>
+            <?php endif; ?>
+                                        <br><br>
+                                        <a href="http://www.moip.com.br" target="_blank"><img src="https://www.moip.com.br/moiplabs/url.png" border="0"></a>
+                                    </div>
+
+                                </li>
+    <?php else: ?>
+                                            <li>
+                                                <img src="https://www.moip.com.br/moiplabs/logo_moip.png">
+                                            </li>
+    <?php endif; ?>
+</ul>
